@@ -1,0 +1,16 @@
+{
+  "client_id": "e4051105-8bd7-4ddc-bad7-66a68f75b530",
+  "authorization_user_agent": "DEFAULT",
+  "redirect_uri": "msauth://com.gears.gearserp/2n0dlOJsFBKW%2F38eBZEi9ggSwqo%3D",
+  "broker_redirect_uri_registered": true,
+  "account_mode": "SINGLE",
+  "authorities": [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADMultipleOrgs",
+        "tenant_id": "organizations"
+      }
+    }
+  ]
+}
