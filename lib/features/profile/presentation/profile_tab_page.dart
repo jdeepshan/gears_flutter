@@ -1,152 +1,383 @@
 import 'package:flutter/material.dart';
 
-/// Bottom-nav tab 2 — mirrors [ProfileFragment].
+/// Bottom-nav tab — mirrors Android [ProfileFragment] layout.
 class ProfileTabPage extends StatelessWidget {
   const ProfileTabPage({super.key});
 
-  static const _shortcuts = [
-    _ProfileShortcut(
-      title: 'Pay slips',
-      icon: Icons.payments_outlined,
-      routeLabel: 'PaySlipsStdActivity',
-    ),
-    _ProfileShortcut(
-      title: 'Leaves',
-      icon: Icons.beach_access_outlined,
-      routeLabel: 'LeavesStdActivity',
-    ),
-    _ProfileShortcut(
-      title: 'Expense claims',
-      icon: Icons.receipt_long_outlined,
-      routeLabel: 'ExpenseClaimStdActivity',
-    ),
-    _ProfileShortcut(
-      title: 'Attendance',
-      icon: Icons.schedule_outlined,
-      routeLabel: 'AttendanceHistoryActivity',
-    ),
+  static const _darkGrey = Color(0xFF2A2C2F);
+  static const _grey1 = Color(0xFF666666);
+  static const _grey2 = Color(0xFF8F8F8F);
+
+  static const _dashboardWidgets = [
+    _DashboardWidget(label: 'Payslips', icon: Icons.receipt_long_outlined),
+    _DashboardWidget(label: 'Leaves', icon: Icons.date_range_outlined),
+    _DashboardWidget(label: 'Claims', icon: Icons.payments_outlined),
+    _DashboardWidget(label: 'Attendance', icon: Icons.access_time_outlined),
+    _DashboardWidget(label: 'Requests', icon: Icons.description_outlined),
+  ];
+
+  static const _profileDetails = [
+    _ProfileDetailItem(label: 'Mobile Number', value: '076 xxx xxxx'),
+    _ProfileDetailItem(label: 'Telephone', value: '+968 xxxx xxxx'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+    final primary = Theme.of(context).colorScheme.primary;
+
+    // TODO: bind from getSmeProfilePersonalDetails API (ProfileFragment.setStdUI).
+    const fullName = 'DAVID LUKE';
+    const email = 'saulniguez@atelti.co';
+    const companyName = 'Prime Business & Solutions';
+    const employeeCode = 'PBS/EMP/000003';
+    const joinedDate = '01/01/2021';
+
+    return ColoredBox(
+      color: Colors.white,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _ProfileHeader(
+              primary: primary,
+              fullName: fullName,
+              email: email,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 74,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: _dashboardWidgets.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: 15),
+                itemBuilder: (context, index) {
+                  final widget = _dashboardWidgets[index];
+                  return _DashboardWidgetTile(
+                    widget: widget,
+                    primary: primary,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${widget.label} — coming soon')),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _CompanyCard(companyName: companyName, primary: primary),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _EmployeeCodeCard(
+                      employeeCode: employeeCode,
+                      primary: primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _DateJoinedCard(joinedDate: joinedDate),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+              child: Card(
+                elevation: 0,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  side: BorderSide(color: Colors.grey.shade200),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < _profileDetails.length; i++)
+                        _ProfileDetailRow(
+                          item: _profileDetails[i],
+                          showDivider: i < _profileDetails.length - 1,
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Employee name',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'employee@company.com',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({
+    required this.primary,
+    required this.fullName,
+    required this.email,
+  });
+
+  final Color primary;
+  final String fullName;
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 213,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _ProfileBannerPainter(color: primary),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 35,
+            child: Center(
+              child: Container(
+                width: 143,
+                height: 143,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 6,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -10,
+            top: 67,
+            child: Container(
+              width: 79,
+              height: 79,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 6,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 33.5,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.grey.shade200,
+                    child: Icon(
+                      Icons.person,
+                      size: 36,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileBannerPainter extends CustomPainter {
+  _ProfileBannerPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scaleX = size.width / 361;
+    final scaleY = size.height / 213;
+
+    final path = Path()
+      ..moveTo(0, 183.074 * scaleY)
+      ..lineTo(0, 0)
+      ..lineTo(361 * scaleX, 0)
+      ..lineTo(361 * scaleX, 183.074 * scaleY)
+      ..cubicTo(
+        328.333 * scaleX,
+        194.81 * scaleY,
+        236.6 * scaleX,
+        213 * scaleY,
+        179 * scaleX,
+        213 * scaleY,
+      )
+      ..cubicTo(
+        121.4 * scaleX,
+        213 * scaleY,
+        38.667 * scaleX,
+        194.81 * scaleY,
+        0,
+        183.074 * scaleY,
+      )
+      ..close();
+
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProfileBannerPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
+class _DashboardWidgetTile extends StatelessWidget {
+  const _DashboardWidgetTile({
+    required this.widget,
+    required this.primary,
+    required this.onTap,
+  });
+
+  final _DashboardWidget widget;
+  final Color primary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(37),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: 84,
+          height: 74,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(widget.icon, size: 20, color: primary),
+                const SizedBox(height: 4),
+                Text(
+                  widget.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Text('Quick actions', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 1.4,
-          children: [
-            for (final shortcut in _shortcuts)
-              _ShortcutCard(shortcut: shortcut),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text('Dashboard widgets', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.dashboard_outlined),
-            title: const Text('Request widgets'),
-            subtitle: const Text('DashboardWidgetRequestAdapter — coming soon'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Dashboard widgets — coming soon')),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _ProfileShortcut {
-  const _ProfileShortcut({
-    required this.title,
-    required this.icon,
-    required this.routeLabel,
+class _CompanyCard extends StatelessWidget {
+  const _CompanyCard({
+    required this.companyName,
+    required this.primary,
   });
 
-  final String title;
-  final IconData icon;
-  final String routeLabel;
-}
-
-class _ShortcutCard extends StatelessWidget {
-  const _ShortcutCard({required this.shortcut});
-
-  final _ProfileShortcut shortcut;
+  final String companyName;
+  final Color primary;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${shortcut.title} (${shortcut.routeLabel})')),
-          );
-        },
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: SizedBox(
+        height: 115,
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.only(left: 13),
+          child: Row(
             children: [
-              Icon(
-                shortcut.icon,
-                size: 32,
-                color: Theme.of(context).colorScheme.primary,
+              Expanded(
+                flex: 8,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 48),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Company',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: ProfileTabPage._darkGrey,
+                        ),
+                      ),
+                      Text(
+                        companyName,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: ProfileTabPage._grey2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                shortcut.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelLarge,
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20, right: 20.4),
+                  child: Icon(
+                    Icons.apartment_outlined,
+                    size: 72,
+                    color: primary.withValues(alpha: 0.35),
+                  ),
+                ),
               ),
             ],
           ),
@@ -154,4 +385,161 @@ class _ShortcutCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _EmployeeCodeCard extends StatelessWidget {
+  const _EmployeeCodeCard({
+    required this.employeeCode,
+    required this.primary,
+  });
+
+  final String employeeCode;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: primary,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Employee Code',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              employeeCode,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DateJoinedCard extends StatelessWidget {
+  const _DateJoinedCard({required this.joinedDate});
+
+  final String joinedDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+        child: Column(
+          children: [
+            const Text(
+              'Date Joined',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: ProfileTabPage._darkGrey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              joinedDate,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                color: ProfileTabPage._grey1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileDetailRow extends StatelessWidget {
+  const _ProfileDetailRow({
+    required this.item,
+    required this.showDivider,
+  });
+
+  final _ProfileDetailItem item;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: ProfileTabPage._darkGrey,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  item.value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: ProfileTabPage._grey1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            height: 0.5,
+            thickness: 0.5,
+            indent: 32,
+            color: Colors.black.withValues(alpha: 0.1),
+          ),
+      ],
+    );
+  }
+}
+
+class _DashboardWidget {
+  const _DashboardWidget({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+}
+
+class _ProfileDetailItem {
+  const _ProfileDetailItem({required this.label, required this.value});
+
+  final String label;
+  final String value;
 }
