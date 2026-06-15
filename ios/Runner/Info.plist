@@ -40,6 +40,10 @@
 		<string>msauthv2</string>
 		<string>msauthv3</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to attach leave documents.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to attach leave documents.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

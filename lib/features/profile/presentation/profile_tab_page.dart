@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gears_flutter/core/router/routes.dart';
+import 'package:go_router/go_router.dart';
 
 /// Bottom-nav tab 2 — mirrors [ProfileFragment].
 class ProfileTabPage extends StatelessWidget {
@@ -14,6 +16,7 @@ class ProfileTabPage extends StatelessWidget {
       title: 'Leaves',
       icon: Icons.beach_access_outlined,
       routeLabel: 'LeavesStdActivity',
+      route: AppRoutes.leaves,
     ),
     _ProfileShortcut(
       title: 'Expense claims',
@@ -110,11 +113,13 @@ class _ProfileShortcut {
     required this.title,
     required this.icon,
     required this.routeLabel,
+    this.route,
   });
 
   final String title;
   final IconData icon;
   final String routeLabel;
+  final String? route;
 }
 
 class _ShortcutCard extends StatelessWidget {
@@ -128,6 +133,11 @@ class _ShortcutCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
+          final route = shortcut.route;
+          if (route != null) {
+            context.push(route);
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${shortcut.title} (${shortcut.routeLabel})')),
           );

@@ -5,6 +5,8 @@ import 'package:gears_flutter/features/apps/presentation/apps_tab_page.dart';
 import 'package:gears_flutter/features/approvals/presentation/approvals_tab_page.dart';
 import 'package:gears_flutter/features/auth/presentation/login_page.dart';
 import 'package:gears_flutter/features/auth/presentation/subdomain_page.dart';
+import 'package:gears_flutter/features/leaves/presentation/leave_detail_page.dart';
+import 'package:gears_flutter/features/leaves/presentation/leaves_page.dart';
 import 'package:gears_flutter/features/profile/presentation/profile_tab_page.dart';
 import 'package:gears_flutter/features/shell/presentation/home_shell_page.dart';
 import 'package:gears_flutter/features/splash/presentation/splash_page.dart';
@@ -64,6 +66,20 @@ abstract final class AppRouter {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.leaves,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const LeavesPage(),
+        routes: [
+          GoRoute(
+            path: ':leaveId',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => LeaveDetailPage(
+              leaveId: state.pathParameters['leaveId']!,
+            ),
           ),
         ],
       ),
