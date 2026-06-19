@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:gears_flutter/core/network/api_exception.dart';
+import 'package:gears_flutter/core/storage/session_storage.dart';
+import 'package:gears_flutter/features/profile/data/models/profile_details_std_response.dart';
+import 'package:gears_flutter/features/profile/data/profile_api.dart';
+import 'package:gears_flutter/features/profile/presentation/profile_format_utils.dart';
+
+const _darkGrey = Color(0xFF2A2C2F);
+const _grey1 = Color(0xFF666666);
+const _grey2 = Color(0xFF8F8F8F);
 
 /// Bottom-nav tab — mirrors Android [ProfileFragment] layout.
-class ProfileTabPage extends StatelessWidget {
+class ProfileTabPage extends StatefulWidget {
   const ProfileTabPage({super.key});
 
-  static const _darkGrey = Color(0xFF2A2C2F);
-  static const _grey1 = Color(0xFF666666);
-  static const _grey2 = Color(0xFF8F8F8F);
+  @override
+  State<ProfileTabPage> createState() => _ProfileTabPageState();
+}
+
+class _ProfileTabPageState extends State<ProfileTabPage> {
+  bool _isLoading = false;
+  ProfileEmployee? _employee;
 
   static const _dashboardWidgets = [
     _DashboardWidget(label: 'Payslips', icon: Icons.receipt_long_outlined),
@@ -16,104 +29,164 @@ class ProfileTabPage extends StatelessWidget {
     _DashboardWidget(label: 'Requests', icon: Icons.description_outlined),
   ];
 
-  static const _profileDetails = [
-    _ProfileDetailItem(label: 'Mobile Number', value: '076 xxx xxxx'),
-    _ProfileDetailItem(label: 'Telephone', value: '+968 xxxx xxxx'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _employee = SessionStorage.userProfileStd?.data?.employee;
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    final baseUrl = SessionStorage.subdomainUrl;
+    if (baseUrl == null || baseUrl.isEmpty) return;
+
+    setState(() => _isLoading = _employee == null);
+
+    try {
+      final response = await ProfileApi(baseUrl).getProfileDetailsStd();
+      if (response.success != true || response.data?.employee == null) {
+        throw ApiException(response.message ?? 'Failed to load profile');
+      }
+
+      await SessionStorage.setUserProfileStd(response);
+
+      if (!mounted) return;
+      setState(() => _employee = response.data!.employee);
+    } on ApiException catch (e) {
+      if (mounted) _showMessage(e.message);
+    } catch (e) {
+      if (mounted) _showMessage(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final employee = _employee;
 
-    // TODO: bind from getSmeProfilePersonalDetails API (ProfileFragment.setStdUI).
-    const fullName = 'DAVID LUKE';
-    const email = 'saulniguez@atelti.co';
-    const companyName = 'Prime Business & Solutions';
-    const employeeCode = 'PBS/EMP/000003';
-    const joinedDate = '01/01/2021';
+    final fullName = employee?.ename1 ?? '';
+    final email = employee?.eEmail ?? '';
+    final companyName = employee?.company?.companyName ?? '';
+    final employeeCode = employee?.eCode ?? '';
+    final joinedDate = formatProfileJoinedDate(employee?.eDOJ);
+    final profileDetails = [
+      _ProfileDetailItem(
+        label: 'Mobile Number',
+        value: profileDetailValue(employee?.ecMobile),
+      ),
+      _ProfileDetailItem(
+        label: 'Telephone',
+        value: profileDetailValue(employee?.epTelephone),
+      ),
+    ];
 
     return ColoredBox(
       color: Colors.white,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _ProfileHeader(
-              primary: primary,
-              fullName: fullName,
-              email: email,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 74,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: _dashboardWidgets.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: 15),
-                itemBuilder: (context, index) {
-                  final widget = _dashboardWidgets[index];
-                  return _DashboardWidgetTile(
-                    widget: widget,
-                    primary: primary,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${widget.label} — coming soon')),
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _ProfileHeader(
+                  primary: primary,
+                  fullName: fullName,
+                  email: email,
+                  imageUrl: employee?.empImageUrl,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 74,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _dashboardWidgets.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 15),
+                    itemBuilder: (context, index) {
+                      final widget = _dashboardWidgets[index];
+                      return _DashboardWidgetTile(
+                        widget: widget,
+                        primary: primary,
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${widget.label} — coming soon'),
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _CompanyCard(companyName: companyName, primary: primary),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _EmployeeCodeCard(
-                      employeeCode: employeeCode,
-                      primary: primary,
-                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _DateJoinedCard(joinedDate: joinedDate),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-              child: Card(
-                elevation: 0,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  side: BorderSide(color: Colors.grey.shade200),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Column(
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _CompanyCard(
+                    companyName: companyName,
+                    primary: primary,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (var i = 0; i < _profileDetails.length; i++)
-                        _ProfileDetailRow(
-                          item: _profileDetails[i],
-                          showDivider: i < _profileDetails.length - 1,
+                      Expanded(
+                        child: _EmployeeCodeCard(
+                          employeeCode: employeeCode,
+                          primary: primary,
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _DateJoinedCard(joinedDate: joinedDate),
+                      ),
                     ],
                   ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                  child: Card(
+                    elevation: 0,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < profileDetails.length; i++)
+                            _ProfileDetailRow(
+                              item: profileDetails[i],
+                              showDivider: i < profileDetails.length - 1,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          if (_isLoading)
+            const ColoredBox(
+              color: Colors.white54,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -124,11 +197,13 @@ class _ProfileHeader extends StatelessWidget {
     required this.primary,
     required this.fullName,
     required this.email,
+    this.imageUrl,
   });
 
   final Color primary;
   final String fullName;
   final String email;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -143,8 +218,8 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 0,
-            right: 0,
+            left: 100,
+            right: 50,
             top: 35,
             child: Center(
               child: Container(
@@ -185,11 +260,16 @@ class _ProfileHeader extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.grey.shade200,
-                    child: Icon(
-                      Icons.person,
-                      size: 36,
-                      color: Colors.grey.shade500,
-                    ),
+                    backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                        ? NetworkImage(imageUrl!)
+                        : null,
+                    child: imageUrl == null || imageUrl!.isEmpty
+                        ? Icon(
+                            Icons.person,
+                            size: 36,
+                            color: Colors.grey.shade500,
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -353,7 +433,7 @@ class _CompanyCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: ProfileTabPage._darkGrey,
+                          color: _darkGrey,
                         ),
                       ),
                       Text(
@@ -361,7 +441,7 @@ class _CompanyCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: ProfileTabPage._grey2,
+                          color: _grey2,
                         ),
                       ),
                     ],
@@ -455,7 +535,7 @@ class _DateJoinedCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: ProfileTabPage._darkGrey,
+                color: _darkGrey,
               ),
             ),
             const SizedBox(height: 8),
@@ -465,7 +545,7 @@ class _DateJoinedCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w500,
-                color: ProfileTabPage._grey1,
+                color: _grey1,
               ),
             ),
           ],
@@ -498,7 +578,7 @@ class _ProfileDetailRow extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: ProfileTabPage._darkGrey,
+                    color: _darkGrey,
                   ),
                 ),
               ),
@@ -511,7 +591,7 @@ class _ProfileDetailRow extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: ProfileTabPage._grey1,
+                    color: _grey1,
                   ),
                 ),
               ),

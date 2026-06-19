@@ -6,6 +6,7 @@ import 'package:gears_flutter/features/auth/data/azure_ad_test_config.dart';
 import 'package:gears_flutter/features/auth/data/models/configuration_info_response.dart';
 import 'package:gears_flutter/features/auth/data/models/login_configuration.dart';
 import 'package:gears_flutter/features/auth/data/models/login_response.dart';
+import 'package:gears_flutter/features/profile/data/models/profile_details_std_response.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Local session flags for navigation (scaffold — replace with token/API later).
@@ -24,6 +25,7 @@ class SessionStorage {
   static const _keyTokenType = 'token_type';
   static const _keyIsAzureAdUser = 'is_azure_ad_user';
   static const _keySelectedCompanyId = 'selected_company_id';
+  static const _keyUserProfileStd = 'user_profile_std';
 
   static SharedPreferences? _prefs;
   static final Map<String, Object?> _memory = {};
@@ -152,6 +154,14 @@ class SessionStorage {
 
   static bool get isLoggedIn => _getBool(_keyLoggedIn) ?? false;
 
+  static ProfileDetailsStdResponse? get userProfileStd {
+    final json = _getString(_keyUserProfileStd);
+    if (json == null || json.isEmpty) return null;
+    return ProfileDetailsStdResponse.fromJson(
+      jsonDecode(json) as Map<String, dynamic>,
+    );
+  }
+
   static Future<void> setSubdomain(String url) async {
     await _setString(_keySubdomain, url.trim());
   }
@@ -225,6 +235,15 @@ class SessionStorage {
     await _setBool(_keyIsAzureAdUser, value);
   }
 
+  static Future<void> setUserProfileStd(
+    ProfileDetailsStdResponse profile,
+  ) async {
+    await _setString(_keyUserProfileStd, jsonEncode(profile.toJson()));
+
+    final companyId = profile.data?.employee?.company?.companyId;
+    await setSelectedCompanyId(companyId);
+  }
+
   static Future<void> setSelectedCompanyId(int? companyId) async {
     if (companyId == null) {
       await _remove(_keySelectedCompanyId);
@@ -244,6 +263,7 @@ class SessionStorage {
     await _remove(_keyTokenType);
     await _remove(_keyIsAzureAdUser);
     await _remove(_keySelectedCompanyId);
+    await _remove(_keyUserProfileStd);
   }
 
   static Future<void> clearAll() async {

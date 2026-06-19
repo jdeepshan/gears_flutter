@@ -3,6 +3,9 @@ import 'package:gears_flutter/core/router/routes.dart';
 import 'package:gears_flutter/core/storage/session_storage.dart';
 import 'package:gears_flutter/features/apps/presentation/apps_tab_page.dart';
 import 'package:gears_flutter/features/approvals/presentation/approvals_tab_page.dart';
+import 'package:gears_flutter/features/approvals/presentation/std_approval_args.dart';
+import 'package:gears_flutter/features/approvals/presentation/std_expense_claim_approval_info_page.dart';
+import 'package:gears_flutter/features/approvals/presentation/std_leave_approval_info_page.dart';
 import 'package:gears_flutter/features/auth/presentation/login_page.dart';
 import 'package:gears_flutter/features/auth/presentation/subdomain_page.dart';
 import 'package:gears_flutter/features/profile/presentation/profile_tab_page.dart';
@@ -29,6 +32,20 @@ abstract final class AppRouter {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.leaveApprovalInfo,
+        builder: (context, state) {
+          final args = state.extra as StdApprovalArgs;
+          return StdLeaveApprovalInfoPage(args: args);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.expenseClaimApprovalInfo,
+        builder: (context, state) {
+          final args = state.extra as StdApprovalArgs;
+          return StdExpenseClaimApprovalInfoPage(args: args);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

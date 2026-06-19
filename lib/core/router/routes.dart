@@ -6,4 +6,6 @@ abstract final class AppRoutes {
   static const homeApprovals = '/home/approvals';
   static const homeProfile = '/home/profile';
   static const homeApps = '/home/apps';
+  static const leaveApprovalInfo = '/approvals/leave';
+  static const expenseClaimApprovalInfo = '/approvals/expense-claim';
 }
