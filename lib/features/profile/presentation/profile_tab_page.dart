@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gears_flutter/core/network/api_exception.dart';
+import 'package:gears_flutter/core/router/routes.dart';
 import 'package:gears_flutter/core/storage/session_storage.dart';
 import 'package:gears_flutter/features/profile/data/models/profile_details_std_response.dart';
 import 'package:gears_flutter/features/profile/data/profile_api.dart';
 import 'package:gears_flutter/features/profile/presentation/profile_format_utils.dart';
+import 'package:go_router/go_router.dart';
 
 const _darkGrey = Color(0xFF2A2C2F);
 const _grey1 = Color(0xFF666666);
@@ -23,7 +25,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
   static const _dashboardWidgets = [
     _DashboardWidget(label: 'Payslips', icon: Icons.receipt_long_outlined),
-    _DashboardWidget(label: 'Leaves', icon: Icons.date_range_outlined),
+    _DashboardWidget(
+      label: 'Leaves',
+      icon: Icons.date_range_outlined,
+      route: AppRoutes.leaves,
+    ),
     _DashboardWidget(label: 'Claims', icon: Icons.payments_outlined),
     _DashboardWidget(label: 'Attendance', icon: Icons.access_time_outlined),
     _DashboardWidget(label: 'Requests', icon: Icons.description_outlined),
@@ -119,6 +125,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                         widget: widget,
                         primary: primary,
                         onTap: () {
+                          final route = widget.route;
+                          if (route != null) {
+                            context.push(route);
+                            return;
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('${widget.label} — coming soon'),
@@ -611,10 +622,15 @@ class _ProfileDetailRow extends StatelessWidget {
 }
 
 class _DashboardWidget {
-  const _DashboardWidget({required this.label, required this.icon});
+  const _DashboardWidget({
+    required this.label,
+    required this.icon,
+    this.route,
+  });
 
   final String label;
   final IconData icon;
+  final String? route;
 }
 
 class _ProfileDetailItem {

@@ -8,4 +8,7 @@ abstract final class AppRoutes {
   static const homeApps = '/home/apps';
   static const leaveApprovalInfo = '/approvals/leave';
   static const expenseClaimApprovalInfo = '/approvals/expense-claim';
+  static const leaves = '/leaves';
+
+  static String leaveDetail(String leaveId) => '$leaves/$leaveId';
 }

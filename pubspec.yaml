@@ -39,6 +39,10 @@ dependencies:
   flutter_svg: ^2.0.10+1
   dio: ^5.9.2
   msal_auth: ^3.5.0
+  path_provider: ^2.1.5
+  open_filex: ^4.7.0
+  image_picker: ^1.1.2
+  file_picker: ^8.1.7
 
 dev_dependencies:
   flutter_test:
