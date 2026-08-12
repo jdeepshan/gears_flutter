@@ -732,28 +732,29 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
                             setState(() => _requireDelegation = value),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _DatePickerTile(
-                              title: 'Start Date',
-                              date: _startDate,
-                              onTap: () => _pickDate(isStart: true),
+                        SizedBox(
+                          height: 72, // set whatever fixed height fits your tile
+                          child: Row(children: [
+                            Expanded(
+                              child: _DatePickerTile(
+                                title: 'Start Date',
+                                date: _startDate,
+                                onTap: () => _pickDate(isStart: true),
+                              ),
                             ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text('to'),
-                          ),
-                          Expanded(
-                            child: _DatePickerTile(
-                              title: 'End Date',
-                              date: _endDate,
-                              onTap: () => _pickDate(isStart: false),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: Text('to'),
                             ),
-                          ),
-                        ],
-                      ),
+                            Expanded(
+                              child: _DatePickerTile(
+                                title: 'End Date',
+                                date: _endDate,
+                                onTap: () => _pickDate(isStart: false),
+                              ),
+                            ),
+                          ],),
+                        ),
                       const SizedBox(height: 16),
                       Row(
                         children: [

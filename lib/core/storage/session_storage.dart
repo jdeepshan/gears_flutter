@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:gears_flutter/core/storage/device_id_storage.dart';
 import 'package:gears_flutter/features/auth/data/azure_ad_test_config.dart';
 import 'package:gears_flutter/features/auth/data/models/configuration_info_response.dart';
 import 'package:gears_flutter/features/auth/data/models/login_configuration.dart';
@@ -163,7 +164,12 @@ class SessionStorage {
   }
 
   static Future<void> setSubdomain(String url) async {
-    await _setString(_keySubdomain, url.trim());
+    final trimmed = url.trim();
+    final parsed = Uri.tryParse(trimmed);
+    final normalized = parsed != null && parsed.hasScheme && parsed.host.isNotEmpty
+        ? parsed.replace(host: parsed.host.toLowerCase()).toString()
+        : trimmed;
+    await _setString(_keySubdomain, normalized);
   }
 
   static Future<void> setIsOnPremise(bool value) async {
@@ -267,6 +273,9 @@ class SessionStorage {
   }
 
   static Future<void> clearAll() async {
+    // Same SharedPreferences store holds the device id — keep it for mobile ACL.
+    await DeviceIdStorage.getDeviceId();
     await _clear();
+    await DeviceIdStorage.persistCachedDeviceId();
   }
 }

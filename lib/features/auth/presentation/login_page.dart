@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:gears_flutter/core/network/api_exception.dart';
 import 'package:gears_flutter/core/router/routes.dart';
+import 'package:gears_flutter/core/storage/device_id_storage.dart';
 import 'package:gears_flutter/core/storage/session_storage.dart';
 import 'package:gears_flutter/features/auth/data/auth_api.dart';
 import 'package:gears_flutter/features/auth/data/azure_auth_config.dart';
@@ -22,14 +25,21 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-
-  bool get _isAzureLogin => SessionStorage.isAzureConfig == 1;
+  String? _deviceId;
 
   bool get _isKeycloakLogin => SessionStorage.loginType == 4;
 
-  bool get _isSsoEnabled => _isAzureLogin || _isKeycloakLogin;
+  @override
+  void initState() {
+    super.initState();
+    _loadDeviceId();
+  }
 
-  bool get _isPasswordLoginEnabled => !_isAzureLogin && !_isKeycloakLogin;
+  Future<void> _loadDeviceId() async {
+    final deviceId = await DeviceIdStorage.getDeviceId();
+    if (!mounted) return;
+    setState(() => _deviceId = deviceId);
+  }
 
   @override
   void dispose() {
@@ -56,7 +66,11 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.success == false) {
-        throw ApiException('Login failed. Please check your credentials.');
+        throw ApiException(
+          response.message?.isNotEmpty == true
+              ? response.message!
+              : 'Login failed. Please check your credentials.',
+        );
       }
 
       await SessionStorage.setLoginTokens(response);
@@ -76,13 +90,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _onSsoLogin() async {
+  Future<void> _onAdLogin() async {
     if (_isKeycloakLogin) {
       _showMessage('Keycloak sign-in is not yet supported on this platform.');
       return;
     }
-
-    if (!_isAzureLogin) return;
 
     final baseUrl = SessionStorage.subdomainUrl;
     if (baseUrl == null || baseUrl.isEmpty) {
@@ -107,7 +119,11 @@ class _LoginPageState extends State<LoginPage> {
 
       final accessToken = apiResponse.accessToken;
       if (accessToken == null || accessToken.isEmpty) {
-        throw ApiException('Login failed. No access token received.');
+        throw ApiException(
+          apiResponse.message?.isNotEmpty == true
+              ? apiResponse.message!
+              : 'Login failed. No access token received.',
+        );
       }
 
       await SessionStorage.setAccessToken(accessToken);
@@ -137,124 +153,286 @@ class _LoginPageState extends State<LoginPage> {
     context.go(AppRoutes.subdomain);
   }
 
+  Future<void> _onCopyDeviceId() async {
+    final deviceId = _deviceId ?? await DeviceIdStorage.getDeviceId();
+    await Clipboard.setData(ClipboardData(text: deviceId));
+    if (!mounted) return;
+    setState(() => _deviceId = deviceId);
+    _showMessage('Device ID copied: $deviceId');
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final subdomain = SessionStorage.subdomainUrl ?? '';
-    final ssoLabel = _isKeycloakLogin
-        ? 'Sign in with Keycloak'
-        : 'Sign in with Microsoft';
+  Widget _connectedSubdomain(String subdomain, Color primaryColor) {
+    final display = subdomain.endsWith('/')
+        ? subdomain.substring(0, subdomain.length - 1)
+        : subdomain;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign in'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (subdomain.isNotEmpty) ...[
-                  Chip(
-                    avatar: const Icon(Icons.domain, size: 18),
-                    label: Text(subdomain),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                TextFormField(
-                  controller: _usernameController,
-                  enabled: _isPasswordLoginEnabled && !_isLoading,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (!_isPasswordLoginEnabled) return null;
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Username is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  enabled: _isPasswordLoginEnabled && !_isLoading,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: _isPasswordLoginEnabled
-                          ? () {
-                              setState(() => _obscurePassword = !_obscurePassword);
-                            }
-                          : null,
-                    ),
-                  ),
-                  obscureText: _obscurePassword,
-                  onFieldSubmitted: _isPasswordLoginEnabled ? (_) => _onLogin() : null,
-                  validator: (value) {
-                    if (!_isPasswordLoginEnabled) return null;
-                    if (value == null || value.isEmpty) {
-                      return 'Password is required';
-                    }
-                    return null;
-                  },
-                ),
-                if (_isPasswordLoginEnabled) ...[
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        _showMessage('Forgot password — coming soon');
-                      },
-                      child: const Text('Forgot password?'),
-                    ),
-                  ),
-                ],
-                const Spacer(),
-                if (_isSsoEnabled)
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _onSsoLogin,
-                    icon: const Icon(Icons.login),
-                    label: Text(ssoLabel),
-                  ),
-                if (_isSsoEnabled) const SizedBox(height: 12),
-                if (_isPasswordLoginEnabled)
-                  FilledButton(
-                    onPressed: _isLoading ? null : _onLogin,
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Sign in'),
-                  ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _isLoading ? null : _onChangeSubdomain,
-                  child: const Text('Edit Subdomain'),
-                ),
-              ],
+    final hostStart = display.indexOf('://');
+    final highlightStart = hostStart >= 0 ? hostStart + 3 : 0;
+    final highlightEnd = display.indexOf('.', highlightStart);
+    if (highlightEnd <= highlightStart) {
+      return Text.rich(
+        TextSpan(
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          children: [
+            const TextSpan(text: 'Connected '),
+            TextSpan(
+              text: display,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Text.rich(
+      TextSpan(
+        style: const TextStyle(fontSize: 13, color: Colors.black87),
+        children: [
+          const TextSpan(text: 'Connected '),
+          TextSpan(text: display.substring(0, highlightStart)),
+          TextSpan(
+            text: display.substring(highlightStart, highlightEnd),
+            style: TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
+          TextSpan(text: display.substring(highlightEnd)),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final subdomain = SessionStorage.subdomainUrl ?? '';
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/images/splash_background.svg',
+              fit: BoxFit.fill,
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 48,
+                        vertical: 24,
+                      ),
+                      child: Image.asset(
+                        'assets/images/osos_splash_logo.png',
+                        color: Colors.white,
+                        fit: BoxFit.contain,
+                        height: 72,
+                      ),
+                    ),
+                    Card(
+                      elevation: 4,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (subdomain.isNotEmpty)
+                                _connectedSubdomain(subdomain, primaryColor)
+                              else
+                                const Text(
+                                  'Connected Not set',
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              if (_deviceId != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: SelectableText(
+                                        'Device ID: $_deviceId',
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Copy Device ID',
+                                      onPressed: _onCopyDeviceId,
+                                      icon: const Icon(Icons.copy, size: 18),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              const SizedBox(height: 27),
+                              TextFormField(
+                                controller: _usernameController,
+                                enabled: !_isLoading,
+                                decoration: const InputDecoration(
+                                  labelText: 'Username',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                                textInputAction: TextInputAction.next,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Username is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _passwordController,
+                                enabled: !_isLoading,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(
+                                        () =>
+                                            _obscurePassword = !_obscurePassword,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                obscureText: _obscurePassword,
+                                onFieldSubmitted: (_) => _onLogin(),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Password is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 22),
+                              FilledButton(
+                                onPressed: _isLoading ? null : _onLogin,
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'LOGIN',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(height: 8),
+                              FilledButton(
+                                onPressed: _isLoading ? null : _onAdLogin,
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: Text(
+                                  _isKeycloakLogin
+                                      ? 'LOGIN WITH KEYCLOAK'
+                                      : 'LOGIN WITH AD',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              FilledButton.icon(
+                                onPressed:
+                                    _isLoading ? null : _onChangeSubdomain,
+                                icon: const Icon(Icons.link, size: 18),
+                                label: const Text(
+                                  'EDIT SUBDOMAIN',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  backgroundColor: Colors.black,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text.rich(
+                                TextSpan(
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'Powered by '),
+                                    TextSpan(
+                                      text: 'OSOS',
+                                      style: TextStyle(color: primaryColor),
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

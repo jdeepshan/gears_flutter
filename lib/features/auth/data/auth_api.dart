@@ -15,7 +15,7 @@ class AuthApi {
   Future<ConfigurationInfoResponse> getConfigurationInfo() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/api/v1/getConfigurationInfo',
+        'api/v1/getConfigurationInfo',
       );
       return ConfigurationInfoResponse.fromJson(response.data!);
     } on DioException catch (e) {
@@ -29,7 +29,7 @@ class AuthApi {
   }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/api/v1/login',
+        'api/v1/login',
         data: {
           'grant_type': 'password',
           'username': username,
@@ -49,14 +49,24 @@ class AuthApi {
   }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/api/v1/oauth/login_with_token',
+        'api/v1/oauth/login_with_token',
         data: {
           'username': username,
           'token': token,
           'isAzure': true,
         },
       );
-      return LoginWithAdTokenResponse.fromJson(response.data!);
+      final parsed = LoginWithAdTokenResponse.fromJson(response.data!);
+      if (parsed.success == false) {
+        throw ApiException(
+          parsed.message?.isNotEmpty == true
+              ? parsed.message!
+              : 'Login failed. Please try again.',
+        );
+      }
+      return parsed;
+    } on ApiException {
+      rethrow;
     } on DioException catch (e) {
       throw ApiException(_parseErrorMessage(e));
     }

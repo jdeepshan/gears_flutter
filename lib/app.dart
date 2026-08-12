@@ -8,7 +8,7 @@ class GearsErpApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Gears ERP',
+      title: 'OSOS ERP',
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,

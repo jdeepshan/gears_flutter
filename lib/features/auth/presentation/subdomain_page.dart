@@ -21,6 +21,19 @@ class _SubdomainPageState extends State<SubdomainPage> {
 
   bool _isLoading = false;
   bool _isCloud = true;
+  String? _deviceId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeviceId();
+  }
+
+  Future<void> _loadDeviceId() async {
+    final deviceId = await DeviceIdStorage.getDeviceId();
+    if (!mounted) return;
+    setState(() => _deviceId = deviceId);
+  }
 
   @override
   void dispose() {
@@ -87,12 +100,13 @@ class _SubdomainPageState extends State<SubdomainPage> {
   }
 
   Future<void> _onCopyDeviceId() async {
-    final deviceId = await DeviceIdStorage.getDeviceId();
+    final deviceId = _deviceId ?? await DeviceIdStorage.getDeviceId();
     await Clipboard.setData(ClipboardData(text: deviceId));
 
     if (!mounted) return;
+    setState(() => _deviceId = deviceId);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Device ID copied!')),
+      SnackBar(content: Text('Device ID copied: $deviceId')),
     );
   }
 
@@ -224,6 +238,23 @@ class _SubdomainPageState extends State<SubdomainPage> {
                           ),
 
                           const SizedBox(height: 12),
+
+                          if (_deviceId != null) ...[
+                            Text(
+                              'Device ID',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            SelectableText(
+                              _deviceId!,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
 
                           /// Copy Device ID Button
                           SizedBox(

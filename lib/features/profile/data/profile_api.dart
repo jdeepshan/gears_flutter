@@ -13,7 +13,7 @@ class ProfileApi {
   Future<ProfileDetailsStdResponse> getProfileDetailsStd() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/api/v1/getSmeProfilePersonalDetails',
+        'api/v1/getSmeProfilePersonalDetails',
       );
       return ProfileDetailsStdResponse.fromJson(response.data!);
     } on DioException catch (e) {

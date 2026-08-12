@@ -5,6 +5,7 @@ class LoginResponse {
     this.accessToken,
     this.refreshToken,
     this.success,
+    this.message,
   });
 
   final String? tokenType;
@@ -12,6 +13,7 @@ class LoginResponse {
   final String? accessToken;
   final String? refreshToken;
   final bool? success;
+  final String? message;
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
@@ -20,6 +22,7 @@ class LoginResponse {
       accessToken: json['access_token'] as String?,
       refreshToken: json['refresh_token'] as String?,
       success: json['success'] as bool?,
+      message: json['message'] as String?,
     );
   }
 }

@@ -69,16 +69,27 @@ class DeviceIdStorage {
 
   static String? get cachedDeviceId => _cachedDeviceId ?? _readStoredId();
 
+  /// Re-writes the current device id after SharedPreferences was cleared.
+  static Future<void> persistCachedDeviceId() async {
+    final id = await getDeviceId();
+    await _writeStoredId(id);
+    _cachedDeviceId = id;
+  }
+
   static Future<String> getDeviceId() async {
     final cached = _cachedDeviceId;
     if (cached != null && cached.isNotEmpty) {
-      return cached;
+      return cached.trim();
     }
 
     final stored = _readStoredId();
-    if (stored != null && stored.isNotEmpty) {
-      _cachedDeviceId = stored;
-      return stored;
+    if (stored != null && stored.trim().isNotEmpty) {
+      final normalized = stored.trim();
+      _cachedDeviceId = normalized;
+      if (normalized != stored) {
+        await _writeStoredId(normalized);
+      }
+      return normalized;
     }
 
     final generated = _generateUuid();

@@ -6,7 +6,13 @@ class ApiClient {
   ApiClient._();
 
   static Dio create(String baseUrl) {
-    final normalized = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
+    // Normalize host to lowercase so header/host matching stays consistent.
+    final parsed = Uri.tryParse(baseUrl.trim());
+    final hostNormalized = parsed != null && parsed.hasScheme && parsed.host.isNotEmpty
+        ? parsed.replace(host: parsed.host.toLowerCase()).toString()
+        : baseUrl.trim();
+    final normalized =
+        hostNormalized.endsWith('/') ? hostNormalized : '$hostNormalized/';
 
     final dio = Dio(
       BaseOptions(
