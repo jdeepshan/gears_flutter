@@ -32,69 +32,41 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/splash_background.SVG'),
-            fit:  BoxFit.fill,
+      backgroundColor: colorScheme.primary,
+      body: Stack(
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 70,
+                right: 45,
+              ),
+              child: Image.asset(
+                'assets/images/osos_splash_logo.png',
+                color: colorScheme.onPrimary,
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            /// Center Logo
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 70,
-                  right: 45,
-                ),
-                child: Image.asset(
-                  'assets/images/osos_splash_logo.png',
-                  fit: BoxFit.contain,
+          Positioned(
+            bottom: 8,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'Powered by OSOS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onPrimary,
                 ),
               ),
             ),
-
-            /// Bottom Text
-            Positioned(
-              bottom: 8,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  'Powered by OSOS',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ),
-
-            /// Optional Powered By Image
-            /*
-            Positioned(
-              bottom: 8,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Image.asset(
-                  'assets/images/powered_by_gears.png',
-                  height: 12,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            */
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

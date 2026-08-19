@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 abstract final class AppTheme {
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1565C0),
-      brightness: Brightness.light,
+      seedColor: const Color(0xFF4E342E),
     );
 
     return ThemeData(
@@ -19,12 +18,20 @@ abstract final class AppTheme {
         border: OutlineInputBorder(),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        indicatorColor: colorScheme.primaryContainer,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: colorScheme.primary,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: colorScheme.onPrimary);
+          }
+          return IconThemeData(color: colorScheme.onSurfaceVariant);
+        }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(color: colorScheme.primary, fontSize: 12);
           }
-          return const TextStyle(fontSize: 12);
+          return TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12);
         }),
       ),
     );

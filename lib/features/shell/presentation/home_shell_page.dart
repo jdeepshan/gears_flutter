@@ -68,11 +68,8 @@ class HomeShellPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subdomain = SessionStorage.subdomainUrl ?? '';
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(_tabs[navigationShell.currentIndex].label),
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: () {
@@ -83,16 +80,6 @@ class HomeShellPage extends StatelessWidget {
           },
         ),
         actions: [
-          if (subdomain.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Center(
-                child: Text(
-                  subdomain,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ),
-            ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',

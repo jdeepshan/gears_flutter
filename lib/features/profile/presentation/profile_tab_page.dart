@@ -261,52 +261,55 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 33.5,
-                  backgroundColor: Colors.white,
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
-                        ? NetworkImage(imageUrl!)
-                        : null,
-                    child: imageUrl == null || imageUrl!.isEmpty
-                        ? Icon(
-                            Icons.person,
-                            size: 36,
-                            color: Colors.grey.shade500,
-                          )
-                        : null,
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 33.5,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                          ? NetworkImage(imageUrl!)
+                          : null,
+                      child: imageUrl == null || imageUrl!.isEmpty
+                          ? Icon(
+                              Icons.person,
+                              size: 36,
+                              color: Colors.grey.shade500,
+                            )
+                          : null,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  fullName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 8),
+                  Text(
+                    fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 12,
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
