@@ -22,7 +22,7 @@ android {
     signingConfigs {
         create("gearsRelease") {
             storeFile = file(
-                "/Users/deepshan/Documents/deepshan/android_projects/KEY_STORE/gears_keystore_2.jks",
+                "/Users/osos/Documents/Nipun_Projects/cmp/CmpRnD/androidApp/keystore/gears_keystore.jks",
             )
             storePassword = "Gears@123"
             keyAlias = "key_gears_gearserp"
