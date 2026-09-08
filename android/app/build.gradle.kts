@@ -54,3 +54,9 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Android-layer leak detection (Activity/Fragment/View). Debug only.
+    // Dart/Flutter heap leaks still need DevTools Memory — LeakCanary does not cover those.
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+}

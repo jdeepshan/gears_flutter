@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gears_flutter/core/network/api_timing_interceptor.dart';
 import 'package:gears_flutter/core/network/headers_interceptor.dart';
 
 class ApiClient {
@@ -24,6 +25,8 @@ class ApiClient {
     );
 
     dio.interceptors.add(HeadersInterceptor(normalized));
+    // Release-safe latency logs for Framework_Analysis (adb logcat | grep API_MS)
+    dio.interceptors.add(ApiTimingInterceptor());
 
     if (kDebugMode) {
       dio.interceptors.add(
