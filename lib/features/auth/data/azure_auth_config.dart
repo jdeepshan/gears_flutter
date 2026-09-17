@@ -17,7 +17,7 @@ class AzureAuthConfig {
   final String androidRedirectUri;
 
   static const _releaseRedirectUri =
-      'msauth://com.gears.gearserp/TGBOUBcsIFWTTNYPXwfVjmPiw4w%3D';
+      'msauth://com.gears.gearserp.flutter/TGBOUBcsIFWTTNYPXwfVjmPiw4w%3D';
 
   static AzureAuthConfig? forPathAd(String? pathAd) {
     final resolvedPathAd = AzureAdTestConfig.enabled
@@ -59,7 +59,7 @@ class AzureAuthConfig {
       iosClientId: _iosClientId,
       tenantId: 'common',
       androidRedirectUri:
-          'msauth://com.gears.gearserp/VyykCdW83cnLrpejYNWgjEYIkME%3D',
+          'msauth://com.gears.gearserp.flutter/VyykCdW83cnLrpejYNWgjEYIkME%3D',
     ),
     'osos-qa': AzureAuthConfig(
       configFilePath: 'assets/msal/osos_qa_debug.json',
@@ -67,7 +67,7 @@ class AzureAuthConfig {
       iosClientId: _iosClientId,
       tenantId: 'organizations',
       androidRedirectUri:
-          'msauth://com.gears.gearserp/2n0dlOJsFBKW%2F38eBZEi9ggSwqo%3D',
+          'msauth://com.gears.gearserp.flutter/2n0dlOJsFBKW%2F38eBZEi9ggSwqo%3D',
     ),
   };
 

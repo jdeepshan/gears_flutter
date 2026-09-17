@@ -1,7 +1,7 @@
 {
   "client_id": "8c86c17d-d0c5-482e-a339-079b79e9317f",
   "authorization_user_agent": "DEFAULT",
-  "redirect_uri": "msauth://com.gears.gearserp/TGBOUBcsIFWTTNYPXwfVjmPiw4w%3D",
+  "redirect_uri": "msauth://com.gears.gearserp.flutter/TGBOUBcsIFWTTNYPXwfVjmPiw4w%3D",
   "broker_redirect_uri_registered": true,
   "account_mode": "SINGLE",
   "authorities": [

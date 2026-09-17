@@ -4,9 +4,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:label="gears_flutter"
+        android:label="OSOS ERP"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -40,7 +41,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="com.gears.gearserp"
+                    android:host="com.gears.gearserp.flutter"
                     android:path="/${signing_key_hash}"
                     android:scheme="msauth" />
             </intent-filter>
