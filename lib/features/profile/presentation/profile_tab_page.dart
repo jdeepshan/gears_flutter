@@ -267,24 +267,7 @@ class _ProfileHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 33.5,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.grey.shade200,
-                      backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
-                          ? NetworkImage(imageUrl!)
-                          : null,
-                      child: imageUrl == null || imageUrl!.isEmpty
-                          ? Icon(
-                              Icons.person,
-                              size: 36,
-                              color: Colors.grey.shade500,
-                            )
-                          : null,
-                    ),
-                  ),
+                  _ProfileAvatar(imageUrl: imageUrl),
                   const SizedBox(height: 8),
                   Text(
                     fullName,
@@ -314,6 +297,58 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Loads [imageUrl] and falls back to a person icon when the URL is empty
+/// or the request fails (for example a missing default `male.png`).
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({this.imageUrl});
+
+  final String? imageUrl;
+
+  static const double _diameter = 60;
+
+  bool get _hasUrl {
+    final url = imageUrl;
+    if (url == null || url.isEmpty) return false;
+    final uri = Uri.tryParse(url);
+    return uri != null && (uri.isScheme('http') || uri.isScheme('https'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: 33.5,
+      backgroundColor: Colors.white,
+      child: CircleAvatar(
+        radius: 30,
+        backgroundColor: Colors.grey.shade200,
+        child: _hasUrl
+            ? Image.network(
+                imageUrl!,
+                width: _diameter,
+                height: _diameter,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const _ProfileAvatarPlaceholder(),
+              )
+            : const _ProfileAvatarPlaceholder(),
+      ),
+    );
+  }
+}
+
+class _ProfileAvatarPlaceholder extends StatelessWidget {
+  const _ProfileAvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      Icons.person,
+      size: 36,
+      color: Colors.grey.shade500,
     );
   }
 }
