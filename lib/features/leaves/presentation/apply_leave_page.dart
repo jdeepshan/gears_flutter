@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:gears_flutter/core/platform/ios_camera_picker.dart';
 import 'package:gears_flutter/features/leaves/data/leaves_api.dart';
 import 'package:gears_flutter/features/leaves/data/models/leave.dart';
 import 'package:gears_flutter/features/leaves/data/models/leave_attachment.dart';
@@ -525,7 +527,13 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
         ),
       ),
     );
-    if (source == null) return;
+    if (source == null || !mounted) return;
+
+    // iOS ignores a native camera presented while the sheet is still closing.
+    if (Platform.isIOS) {
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+    }
 
     if (source == 2) {
       final result = await FilePicker.platform.pickFiles(withData: true);
@@ -541,11 +549,26 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
       return;
     }
 
-    final picked = await _imagePicker.pickImage(
-      source: source == 0 ? ImageSource.camera : ImageSource.gallery,
-      imageQuality: 70,
-    );
-    if (picked == null) return;
+    final XFile? picked;
+    try {
+      if (source == 0 && Platform.isIOS) {
+        picked = await IosCameraPicker.pickImage();
+      } else {
+        picked = await _imagePicker.pickImage(
+          source: source == 0 ? ImageSource.camera : ImageSource.gallery,
+          imageQuality: 70,
+        );
+      }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _showMessage(
+        e.message?.isNotEmpty == true
+            ? e.message!
+            : 'Could not open the camera.',
+      );
+      return;
+    }
+    if (picked == null || !mounted) return;
     final bytes = await picked.readAsBytes();
     _addLocalAttachment(
       name: picked.name,

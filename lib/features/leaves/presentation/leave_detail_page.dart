@@ -334,9 +334,11 @@ class _LeavePeriodRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        LeaveDetailDateChip(
-          title: 'Start Date',
-          date: LeaveUtils.formatLongDisplayDate(leave.startDate),
+        Expanded(
+          child: LeaveDetailDateChip(
+            title: 'Start Date',
+            date: LeaveUtils.formatLongDisplayDate(leave.startDate),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -347,9 +349,11 @@ class _LeavePeriodRow extends StatelessWidget {
                 ),
           ),
         ),
-        LeaveDetailDateChip(
-          title: 'End Date',
-          date: LeaveUtils.formatLongDisplayDate(leave.endDate),
+        Expanded(
+          child: LeaveDetailDateChip(
+            title: 'End Date',
+            date: LeaveUtils.formatLongDisplayDate(leave.endDate),
+          ),
         ),
       ],
     );
