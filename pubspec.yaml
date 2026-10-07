@@ -43,6 +43,7 @@ dependencies:
   path_provider: ^2.1.5
   open_filex: ^4.7.0
   image_picker: ^1.1.2
+  image_cropper: ^12.2.1
   file_picker: ^8.1.7
 
 dev_dependencies:
