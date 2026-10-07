@@ -408,40 +408,43 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            const ListTile(title: Text('Select leave type')),
-            for (final type in _leaveTypes)
-              ListTile(
-                title: Text(type.name ?? ''),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (type.id == _leaveType?.id)
-                      Icon(
-                        Icons.check,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    if (type.id == _leaveType?.id) const SizedBox(width: 8),
-                    Text(
-                      _formatLeaveBalance(type.balance ?? 0),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: (type.balance ?? 0) <= 0
-                            ? const Color(0xFFD32F2F)
-                            : const Color(0xFF2E7D32),
-                      ),
+      builder: (context) {
+        final brown = Theme.of(context).colorScheme.primary;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const ListTile(title: Text('Select leave type')),
+              for (final type in _leaveTypes)
+                ListTile(
+                  tileColor: type.id == _leaveType?.id
+                      ? brown.withValues(alpha: 0.28)
+                      : null,
+                  title: Text(
+                    type.name ?? '',
+                    style: TextStyle(
+                      color: type.id == _leaveType?.id ? brown : null,
+                      fontWeight: type.id == _leaveType?.id
+                          ? FontWeight.w600
+                          : null,
                     ),
-                  ],
+                  ),
+                  trailing: Text(
+                    _formatLeaveBalance(type.balance ?? 0),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: (type.balance ?? 0) <= 0
+                          ? const Color(0xFFD32F2F)
+                          : const Color(0xFF2E7D32),
+                    ),
+                  ),
+                  onTap: () => Navigator.pop(context, type),
                 ),
-                onTap: () => Navigator.pop(context, type),
-              ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
     if (selected != null) await _onLeaveTypeChanged(selected);
   }
