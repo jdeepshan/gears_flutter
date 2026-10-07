@@ -100,97 +100,104 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       color: Colors.white,
       child: Stack(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ProfileHeader(
-                  primary: primary,
-                  fullName: fullName,
-                  email: email,
-                  imageUrl: employee?.empImageUrl,
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 74,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _dashboardWidgets.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(width: 15),
-                    itemBuilder: (context, index) {
-                      final widget = _dashboardWidgets[index];
-                      return _DashboardWidgetTile(
-                        widget: widget,
-                        primary: primary,
-                        onTap: () {
-                          final route = widget.route;
-                          if (route != null) {
-                            context.push(route);
-                            return;
-                          }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${widget.label} — coming soon'),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ProfileHeader(
+                primary: primary,
+                fullName: fullName,
+                email: email,
+                imageUrl: employee?.empImageUrl,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 74,
+                child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _CompanyCard(
-                    companyName: companyName,
-                    primary: primary,
-                  ),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _dashboardWidgets.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 15),
+                  itemBuilder: (context, index) {
+                    final widget = _dashboardWidgets[index];
+                    return _DashboardWidgetTile(
+                      widget: widget,
+                      primary: primary,
+                      onTap: () {
+                        final route = widget.route;
+                        if (route != null) {
+                          context.push(route);
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${widget.label} — coming soon'),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: _EmployeeCodeCard(
-                          employeeCode: employeeCode,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _CompanyCard(
+                          companyName: companyName,
                           primary: primary,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _DateJoinedCard(joinedDate: joinedDate),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _EmployeeCodeCard(
+                                employeeCode: employeeCode,
+                                primary: primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _DateJoinedCard(joinedDate: joinedDate),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                        child: Card(
+                          elevation: 0,
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Column(
+                              children: [
+                                for (var i = 0; i < profileDetails.length; i++)
+                                  _ProfileDetailRow(
+                                    item: profileDetails[i],
+                                    showDivider: i < profileDetails.length - 1,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-                  child: Card(
-                    elevation: 0,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      side: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < profileDetails.length; i++)
-                            _ProfileDetailRow(
-                              item: profileDetails[i],
-                              showDivider: i < profileDetails.length - 1,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           if (_isLoading)
             const ColoredBox(
