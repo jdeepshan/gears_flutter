@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gears_flutter/core/platform/ios_camera_picker.dart';
 import 'package:gears_flutter/features/leaves/data/leaves_api.dart';
 import 'package:gears_flutter/features/leaves/data/models/leave.dart';
 import 'package:gears_flutter/features/leaves/data/models/leave_attachment.dart';
@@ -100,8 +99,9 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
         final summary = await _api.getLeaveSummary(_summaryPayload());
         LeaveAvailability? availability;
         try {
-          availability =
-              await _api.checkLeaveAvailability(_availabilityPayload());
+          availability = await _api.checkLeaveAvailability(
+            _availabilityPayload(summary: summary),
+          );
         } catch (_) {}
         if (!mounted) return;
         _leaveSummary = summary;
@@ -213,45 +213,47 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
         LeaveUtils.toApiDate(_endDate!);
   }
 
+  int _flag(bool? value) => value == true ? 1 : 0;
+
   Map<String, dynamic> _summaryPayload() {
     final type = _leaveType!;
     return {
-      'leaveTypeID': type.id,
-      'value': type.id,
-      'label': type.name,
-      'isDailyBasisAccrual': type.isDailyBasisAccrual ?? 0,
-      'annualEligibilityDays': type.annualEligibilityDays ?? 0,
-      'stretchDays': type.stretchDays ?? 0,
-      'policyMasterID': type.policyMasterId ?? 0,
-      'isCalenderDays': type.isCalendarDays ?? false,
       'allowMinus': type.isAllowsMinus ?? 0,
-      'leaveGroupID': type.leaveGroupId ?? 0,
+      'annualEligibilityDays': type.annualEligibilityDays ?? 0,
+      'attachmentRequired': _flag(type.isAttachmentRequired),
       'balance': type.balance ?? 0,
-      'attachmentRequired': type.isAttachmentRequired ?? false,
+      'isCalenderDays': _flag(type.isCalendarDays),
+      'isDailyBasisAccrual': type.isDailyBasisAccrual ?? 0,
+      'label': type.name ?? '',
+      'leaveGroupID': type.leaveGroupId ?? 0,
+      'leaveTypeID': type.id,
+      'policyMasterID': type.policyMasterId ?? 0,
+      'stretchDays': type.stretchDays,
+      'value': type.value ?? type.id,
     };
   }
 
-  Map<String, dynamic> _availabilityPayload() {
+  Map<String, dynamic> _availabilityPayload({LeaveSummary? summary}) {
     final type = _leaveType!;
-    final summary = _leaveSummary;
-    final entitle = (summary?.isDailyBasisAccrual ?? 0) == 0
-        ? summary?.balance ?? 0
-        : summary?.balanceOnYearEnd ?? 0;
+    final resolved = summary ?? _leaveSummary;
+    final entitle = (type.isDailyBasisAccrual ?? 0) == 1
+        ? resolved?.balanceOnYearEnd ?? 0
+        : resolved?.balance ?? 0;
     return {
-      'leaveTypeID': type.id,
-      'value': type.id,
-      'label': type.name,
-      'startDate': LeaveUtils.toApiDate(_startDate!),
+      'allowMinus': type.isAllowsMinus ?? 0,
+      'attachmentRequired': _flag(type.isAttachmentRequired),
+      'balance': type.balance ?? 0,
       'endDate': LeaveUtils.toApiDate(_endDate!),
       'entitle': entitle,
-      'isHalfDay': _isHalfDay ? 1 : 0,
-      'stretchDays': type.stretchDays ?? 0,
-      'policyMasterID': type.policyMasterId ?? 0,
-      'isCalenderDays': type.isCalendarDays ?? false,
-      'allowMinus': type.isAllowsMinus ?? 0,
+      'isCalenderDays': _flag(type.isCalendarDays),
+      'isHalfDay': _isHalfDay,
+      'label': type.name ?? '',
       'leaveGroupID': type.leaveGroupId ?? 0,
-      'balance': type.balance ?? 0,
-      'attachmentRequired': type.isAttachmentRequired ?? false,
+      'leaveTypeID': type.id,
+      'policyMasterID': type.policyMasterId ?? 0,
+      'startDate': LeaveUtils.toApiDate(_startDate!),
+      'stretchDays': type.stretchDays,
+      'value': type.value ?? type.id,
     };
   }
 
@@ -259,10 +261,11 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
     final type = _leaveType!;
     final summary = _leaveSummary;
     final availability = _leaveAvailability;
-    final entitle = type.policyMasterId == 1 &&
-            (summary?.isDailyBasisAccrual ?? 0) == 1
+    final useYearEndBalance =
+        type.policyMasterId == 1 && (type.isDailyBasisAccrual ?? 0) == 1;
+    final entitle = useYearEndBalance
         ? summary?.balanceOnYearEnd ?? 0
-        : summary?.balance ?? 0;
+        : type.balance ?? 0;
 
     final payload = <String, dynamic>{
       'leaveTypeID': type.id,
@@ -287,13 +290,14 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
       'balanceToDate': summary?.balanceDueToDate ?? 0,
       'openingBalance': summary?.openingBalance ?? 0,
       'utilized': summary?.leaveTaken ?? 0,
-      'finaceYearExist': summary?.finaceYearExist ?? 0,
+      'finaceYearExist': (summary?.finaceYearExist ?? 0).round(),
       'isDailyBasisAccrual': summary?.isDailyBasisAccrual ?? 0,
-      'isPayDeductionApplicable': availability?.deductionApplicable ?? 0,
+      'isPayDeductionApplicable':
+          (availability?.deductionApplicable ?? 0).round(),
       'lastYearCFBalance': summary?.lastYearCFBalance ?? 0,
       'annualEligibilityDays': summary?.entitled ?? 0,
       'totalBalance': summary?.entitled ?? 0,
-      'value': type.value ?? 0,
+      'value': type.value ?? type.id,
       'requireDelegation': _requireDelegation ? 1 : 0,
     };
 
@@ -313,18 +317,33 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
     final files = <Map<String, dynamic>>[];
     for (final attachment in _attachments) {
       if (!attachment.isLocal || attachment.bytes == null) continue;
+      final description = (attachment.description ?? '').trim();
+      final sizeInKbs = attachment.bytes!.length ~/ 1024;
       files.add({
+        'description': description.isEmpty ? 'No Description' : description,
         'file': base64Encode(attachment.bytes!),
-        'fileType': attachment.fileType ?? 'jpeg',
-        'description': attachment.description ?? '',
-        'myFileName': attachment.name ?? 'attachment',
-        'sizeInKbs': attachment.bytes!.length / 1024,
+        'fileType': _submitFileType(attachment),
+        'myFileName': attachment.name,
+        'sizeInKbs': sizeInKbs < 1 ? 1 : sizeInKbs,
       });
     }
-    if (files.isNotEmpty) {
-      payload['attachments'] = files;
-    }
+    payload['attachments'] = files;
     return payload;
+  }
+
+  String _submitFileType(LeaveAttachment attachment) {
+    final name = attachment.name ?? '';
+    final dot = name.lastIndexOf('.');
+    if (dot >= 0 && dot < name.length - 1) {
+      final extension = name.substring(dot + 1).trim();
+      if (extension.isNotEmpty) return extension;
+    }
+    final type = attachment.fileType;
+    if (type != null && type.contains('/')) {
+      final subtype = type.substring(type.indexOf('/') + 1);
+      if (subtype.isNotEmpty && subtype != '*') return subtype;
+    }
+    return type ?? 'jpeg';
   }
 
   Future<void> _fetchSummaryAndAvailability({bool showLoader = true}) async {
@@ -332,8 +351,9 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
     if (showLoader) setState(() => _isLoading = true);
     try {
       final summary = await _api.getLeaveSummary(_summaryPayload());
-      final availability =
-          await _api.checkLeaveAvailability(_availabilityPayload());
+      final availability = await _api.checkLeaveAvailability(
+        _availabilityPayload(summary: summary),
+      );
       if (!mounted) return;
       setState(() {
         _leaveSummary = summary;
@@ -374,6 +394,14 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
     _shiftSegmentIndex = 0;
   }
 
+  String _formatLeaveBalance(double balance) {
+    final rounded = (balance * 10).round() / 10;
+    if (rounded == rounded.roundToDouble()) {
+      return rounded.round().toString();
+    }
+    return rounded.toString();
+  }
+
   Future<void> _pickLeaveType() async {
     final selected = await showModalBottomSheet<LeaveType>(
       context: context,
@@ -387,9 +415,27 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
             for (final type in _leaveTypes)
               ListTile(
                 title: Text(type.name ?? ''),
-                trailing: type.id == _leaveType?.id
-                    ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                    : null,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (type.id == _leaveType?.id)
+                      Icon(
+                        Icons.check,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    if (type.id == _leaveType?.id) const SizedBox(width: 8),
+                    Text(
+                      _formatLeaveBalance(type.balance ?? 0),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: (type.balance ?? 0) <= 0
+                            ? const Color(0xFFD32F2F)
+                            : const Color(0xFF2E7D32),
+                      ),
+                    ),
+                  ],
+                ),
                 onTap: () => Navigator.pop(context, type),
               ),
           ],
@@ -551,14 +597,10 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
 
     final XFile? picked;
     try {
-      if (source == 0 && Platform.isIOS) {
-        picked = await IosCameraPicker.pickImage();
-      } else {
-        picked = await _imagePicker.pickImage(
-          source: source == 0 ? ImageSource.camera : ImageSource.gallery,
-          imageQuality: 70,
-        );
-      }
+      picked = await _imagePicker.pickImage(
+        source: source == 0 ? ImageSource.camera : ImageSource.gallery,
+        imageQuality: 70,
+      );
     } on PlatformException catch (e) {
       if (!mounted) return;
       _showMessage(

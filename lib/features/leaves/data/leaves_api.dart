@@ -513,7 +513,7 @@ class LeavesApi {
       leaveTypes: types,
       coveringEmployeeRequired:
           (_asInt(data['is_covering_employee_required']) ?? 0) != 0,
-      empId: _asInt(empMap?['EmpID']) ?? 0,
+      empId: _asInt(data['EIdNo']) ?? _asInt(empMap?['EmpID']) ?? 0,
       employeeDisplayName: employeeName,
     );
   }

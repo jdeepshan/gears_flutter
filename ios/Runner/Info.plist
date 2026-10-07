@@ -42,6 +42,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to attach leave documents.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access when using the camera to attach leave documents.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to attach leave documents.</string>
 	<key>UIApplicationSceneManifest</key>
