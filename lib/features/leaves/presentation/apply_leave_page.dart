@@ -613,6 +613,14 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
     }
     if (picked == null || !mounted) return;
 
+    // image_picker presents the iOS camera on a temporary key window and
+    // returns the photo before that window is removed. image_cropper presents
+    // on the current key window, so wait until the camera dismiss finishes.
+    if (Platform.isIOS && source == 0) {
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
+    }
+
     final CroppedFile? cropped;
     try {
       cropped = await ImageCropper().cropImage(
