@@ -13,6 +13,7 @@ import 'package:gears_flutter/features/leaves/data/models/leave_summary_item.dar
 import 'package:gears_flutter/features/leaves/presentation/widgets/leave_detail_date_chip.dart';
 import 'package:gears_flutter/features/leaves/utils/apply_leave_summary_builder.dart';
 import 'package:gears_flutter/features/leaves/utils/leave_utils.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
@@ -611,13 +612,43 @@ class _ApplyLeavePageState extends State<ApplyLeavePage> {
       return;
     }
     if (picked == null || !mounted) return;
-    final bytes = await picked.readAsBytes();
+
+    final CroppedFile? cropped;
+    try {
+      cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 70,
+        uiSettings: [
+          AndroidUiSettings(toolbarTitle: 'Crop photo'),
+          IOSUiSettings(title: 'Crop photo'),
+        ],
+      );
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _showMessage(
+        e.message?.isNotEmpty == true
+            ? e.message!
+            : 'Could not crop the photo.',
+      );
+      return;
+    }
+    if (cropped == null || !mounted) return;
+
+    final bytes = await File(cropped.path).readAsBytes();
     _addLocalAttachment(
-      name: picked.name,
+      name: _jpegAttachmentName(picked.name),
       bytes: bytes,
       fileType: 'jpeg',
       isPhoto: true,
     );
+  }
+
+  String _jpegAttachmentName(String original) {
+    final dot = original.lastIndexOf('.');
+    final base = dot > 0 ? original.substring(0, dot) : original;
+    final name = base.trim().isEmpty ? 'photo' : base.trim();
+    return '$name.jpg';
   }
 
   void _addLocalAttachment({
