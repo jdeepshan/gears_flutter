@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gears_flutter/core/network/request_host.dart';
 import 'package:gears_flutter/core/storage/device_id_storage.dart';
 import 'package:gears_flutter/core/storage/session_storage.dart';
 
@@ -7,21 +8,6 @@ class HeadersInterceptor extends QueuedInterceptor {
   HeadersInterceptor(this._baseUrl);
 
   final String _baseUrl;
-
-  /// True for absolute URLs that are outside this API host (e.g. S3).
-  bool _isExternalAbsoluteUrl(RequestOptions options) {
-    final path = options.path;
-    if (!path.startsWith(RegExp(r'https?:', caseSensitive: false))) {
-      return false;
-    }
-
-    final requestHost = Uri.tryParse(path)?.host.toLowerCase();
-    final apiHost = Uri.tryParse(_baseUrl)?.host.toLowerCase();
-    if (requestHost == null || apiHost == null || apiHost.isEmpty) {
-      return true;
-    }
-    return requestHost != apiHost;
-  }
 
   @override
   Future<void> onRequest(
@@ -33,7 +19,7 @@ class HeadersInterceptor extends QueuedInterceptor {
       // mobile headers for relative paths (and same-host absolute paths).
       // Do not rely on string contains(_baseUrl) — Dio lowercases the host in
       // options.uri, which can miss a mixed-case stored subdomain.
-      if (!_isExternalAbsoluteUrl(options)) {
+      if (!isExternalAbsoluteUrl(baseUrl: _baseUrl, path: options.path)) {
         final deviceId = (await DeviceIdStorage.getDeviceId()).trim();
         options.headers['device-id'] = deviceId;
         options.headers['is-mobile'] = '1';

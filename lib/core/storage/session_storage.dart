@@ -27,6 +27,7 @@ class SessionStorage {
   static const _keyIsAzureAdUser = 'is_azure_ad_user';
   static const _keySelectedCompanyId = 'selected_company_id';
   static const _keyUserProfileStd = 'user_profile_std';
+  static const _keyServerTimeDiff = 'server_time_diff';
 
   static SharedPreferences? _prefs;
   static final Map<String, Object?> _memory = {};
@@ -151,6 +152,9 @@ class SessionStorage {
 
   static int? get selectedCompanyId => _getInt(_keySelectedCompanyId);
 
+  /// Seconds to add to the device clock so CSRF timestamps match server time.
+  static int get serverTimeDiffSeconds => _getInt(_keyServerTimeDiff) ?? 0;
+
   static bool get isAzureAdUser => _getBool(_keyIsAzureAdUser) ?? false;
 
   static bool get isLoggedIn => _getBool(_keyLoggedIn) ?? false;
@@ -205,6 +209,12 @@ class SessionStorage {
       await _setInt(_keyLoginType, data.primaryLoginType ?? 0);
       await _remove(_keyLoginConfiguration);
     }
+
+    final serverTime = data.serverTime;
+    if (serverTime != null && serverTime > 0) {
+      final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      await _setInt(_keyServerTimeDiff, serverTime - nowSeconds);
+    }
   }
 
   static Future<void> clearSubdomain() async {
@@ -214,6 +224,7 @@ class SessionStorage {
     await _remove(_keyIsAzure);
     await _remove(_keyLoginType);
     await _remove(_keyLoginConfiguration);
+    await _remove(_keyServerTimeDiff);
   }
 
   static Future<void> setAccessToken(String token) async {
